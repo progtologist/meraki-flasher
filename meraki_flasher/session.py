@@ -20,7 +20,15 @@ from pathlib import Path
 from typing import Callable
 
 from . import chips, firmware
-from .isp import CancelFn, Cancelled, ConnectTimeout, IspError, NuMicroIsp
+from .isp import (
+    COMMAND_TIMEOUT,
+    PROGRAM_TIMEOUT,
+    CancelFn,
+    Cancelled,
+    ConnectTimeout,
+    IspError,
+    NuMicroIsp,
+)
 from .transport import ReadTimeout, SerialTransport, TransportError
 
 LogFn = Callable[[str], None]
@@ -68,10 +76,19 @@ class DeviceInfo:
 class FlashSession:
     """Owns the port and runs one update."""
 
-    def __init__(self, log: LogFn | None = None, hexdump: bool = False, verbose: bool = True) -> None:
+    def __init__(
+        self,
+        log: LogFn | None = None,
+        hexdump: bool = False,
+        verbose: bool = True,
+        command_timeout: float = COMMAND_TIMEOUT,
+        program_timeout: float = PROGRAM_TIMEOUT,
+    ) -> None:
         self._log_fn = log
         self.hexdump = hexdump
         self.verbose = verbose
+        self.command_timeout = command_timeout
+        self.program_timeout = program_timeout
         self.transport: SerialTransport | None = None
         self.isp: NuMicroIsp | None = None
         self.info: DeviceInfo | None = None
@@ -92,7 +109,12 @@ class FlashSession:
         self.transport = transport
         self.port = port
         self.isp = NuMicroIsp(
-            transport, log=self._log, hexdump=self.hexdump, verbose=self.verbose
+            transport,
+            log=self._log,
+            hexdump=self.hexdump,
+            verbose=self.verbose,
+            command_timeout=self.command_timeout,
+            program_timeout=self.program_timeout,
         )
         self._log(f"opened {port} at {baudrate} 8N1")
 

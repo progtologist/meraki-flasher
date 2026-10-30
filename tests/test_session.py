@@ -12,13 +12,27 @@ from meraki_flasher.session import FlashSession, SessionError
 from tests.support import POSIX_ONLY, DeviceHarness, load_image
 
 
+def make_session(logs: list[str] | None = None) -> FlashSession:
+    """Session with short timeouts.
+
+    A wedged device must fail a test in seconds: with the production timeouts
+    a single lost ACK costs 5 s and a failing chunk 10 retries, which over
+    1134 chunks would look exactly like a hung test.
+    """
+    return FlashSession(
+        log=logs.append if logs is not None else None,
+        command_timeout=1.0,
+        program_timeout=2.0,
+    )
+
+
 @unittest.skipUnless(POSIX_ONLY, "requires a POSIX pseudo terminal")
 class SessionTests(unittest.TestCase):
     def test_full_flash_end_to_end(self) -> None:
         logs: list[str] = []
         image = load_image()
         with DeviceHarness() as harness:
-            session = FlashSession(log=logs.append)
+            session = make_session(logs)
             session.open(harness.port)
             info = session.connect(timeout=5)
             self.assertEqual(info.part, "M451VE6AE")
@@ -43,7 +57,7 @@ class SessionTests(unittest.TestCase):
         """The LDROM bootloader only listens for ~300 ms after reset."""
         image = load_image()
         with DeviceHarness(silent_for=0.6) as harness:
-            session = FlashSession()
+            session = make_session()
             session.open(harness.port)
             session.connect(timeout=5)
             session.program(image)
@@ -55,7 +69,7 @@ class SessionTests(unittest.TestCase):
         image = load_image()
         logs: list[str] = []
         with DeviceHarness(fail_ack_at_chunk=3) as harness:
-            session = FlashSession(log=logs.append)
+            session = make_session(logs)
             session.open(harness.port)
             session.connect(timeout=5)
             session.program(image)
@@ -70,7 +84,7 @@ class SessionTests(unittest.TestCase):
         image = load_image()
         noise = b"Project name :MEM03 , App_version = V5.1.4\r\n\x00\xff"
         with DeviceHarness(junk_prefix=noise) as harness:
-            session = FlashSession()
+            session = make_session()
             session.open(harness.port)
             session.connect(timeout=5)
             session.program(image)
@@ -84,7 +98,7 @@ class SessionTests(unittest.TestCase):
             big = Path(tmp) / "too-big.bin"
             big.write_bytes(b"\xff" * (100 * 1024))
             with DeviceHarness() as harness:
-                session = FlashSession()
+                session = make_session()
                 session.open(harness.port)
                 session.connect(timeout=5)
                 image = firmware.load(big)
@@ -101,7 +115,7 @@ class SessionTests(unittest.TestCase):
         muted - it keeps draining - instead of being stopped.
         """
         with DeviceHarness() as harness:
-            session = FlashSession()
+            session = make_session()
             session.open(harness.port)
             harness.device.mute()
             with self.assertRaises(SessionError):
