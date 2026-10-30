@@ -42,6 +42,7 @@ class MockIspDevice(threading.Thread):
         self.silent_for = silent_for
         self.fail_ack_at_chunk = fail_ack_at_chunk
         self.junk_prefix = junk_prefix
+        self.muted = False
 
         self.image = bytearray(b"\xff" * aprom_size)
         self.written = 0
@@ -78,7 +79,6 @@ class MockIspDevice(threading.Thread):
             return
         cmd, index = struct.unpack_from("<II", raw, 0)
         payload = raw[8:]
-        self.packets_received += 1
         self._packet_checksum = protocol.checksum(raw)
 
         # CONNECT, SYNC_PACKNO and RESEND_PACKET re-establish or repair the
@@ -160,7 +160,18 @@ class MockIspDevice(threading.Thread):
             while len(buf) >= protocol.PACKET_SIZE:
                 packet = bytes(buf[: protocol.PACKET_SIZE])
                 del buf[: protocol.PACKET_SIZE]
+                self.packets_received += 1
+                if self.muted:
+                    continue  # keep draining the pty, but answer nothing
                 self._process_packet(packet)
 
     def stop(self) -> None:
         self._stop_event.set()
+
+    def mute(self) -> None:
+        """Stop answering but keep reading.
+
+        A pty whose reader stops blocks the writer once the buffer fills, so
+        tests that need a silent device must mute it rather than stop it.
+        """
+        self.muted = True

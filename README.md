@@ -420,7 +420,7 @@ cd meraki-flasher
 python3 -m unittest discover -s tests -t . -v
 ```
 
-36 tests, about 13 s. They flash a firmware image into the emulated MCU over a
+37 tests, about 9 s. They flash a firmware image into the emulated MCU over a
 pseudo terminal and assert the resulting image is byte-identical; they also pin
 the wire format (initial index 18, +2 per packet, 40 ms connect window,
 reopen-after-connect, 48/56-byte chunks), the resend/retry path, a device that

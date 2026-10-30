@@ -42,6 +42,7 @@ jobs:
         # Meraki's firmware image is not part of the repository, so the suite
         # falls back to a synthetic image of the same size (1134 packets).
         # pty-based tests skip themselves on Windows; macOS and Linux run them.
+        timeout-minutes: 10
         run: python -m unittest discover -s tests -t . -v
 
   lint:

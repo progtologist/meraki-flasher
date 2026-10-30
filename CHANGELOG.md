@@ -4,6 +4,25 @@ All notable changes to Meraki Flasher are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-10-30
+
+### Fixed
+
+- **Hang on macOS, and with a wedged adapter.** `transport.write()` ended with
+  pyserial's `flush()`, which calls `termios.tcdrain()` — a call with no
+  timeout that blocks forever once the peer stops draining the line. It is
+  gone: `write()` is already bounded by `write_timeout`, and the protocol is
+  lock-step, so nothing is lost. This also removes a freeze if the USB adapter
+  is unplugged in the middle of a transfer.
+- **Test harness could deadlock the pty.** `test_connect_timeout_without_device`
+  stopped the emulator thread, which therefore stopped *reading* the pty; with
+  no reader the buffer filled and `tcdrain` blocked, hanging the macOS CI job
+  for over fifteen minutes. The emulator now has `mute()` — it keeps draining
+  the link but answers nothing — and `packets_received` counts packets that
+  arrive rather than packets that were answered.
+- CI: the test step carries `timeout-minutes: 10`, so a future hang fails fast
+  instead of tying up a runner.
+
 ## [1.0.1] - 2026-10-30
 
 ### Fixed
@@ -53,5 +72,6 @@ First public release.
 - Meraki's firmware images and vendor binaries are **not** distributed with this
   project; the test suite falls back to a synthetic image of identical size.
 
+[1.0.2]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.2
 [1.0.1]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.1
 [1.0.0]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.0

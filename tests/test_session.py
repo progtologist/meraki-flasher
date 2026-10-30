@@ -93,14 +93,21 @@ class SessionTests(unittest.TestCase):
                 session.close()
             self.assertEqual(harness.device.written, 0)
 
-    def test_connect_timeout_without_device(self) -> None:
+    def test_silent_device_times_out_without_stalling_the_link(self) -> None:
+        """A device that never answers must not block the writer either.
+
+        On macOS a pty whose reader stops blocks the writer as soon as the
+        buffer fills (and ``tcdrain`` has no timeout), so the emulator is
+        muted - it keeps draining - instead of being stopped.
+        """
         with DeviceHarness() as harness:
             session = FlashSession()
             session.open(harness.port)
-            harness.device.stop()
+            harness.device.mute()
             with self.assertRaises(SessionError):
                 session.connect(timeout=0.5)
             session.close()
+            self.assertGreater(harness.device.packets_received, 0)
 
 
 if __name__ == "__main__":

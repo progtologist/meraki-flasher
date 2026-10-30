@@ -139,6 +139,12 @@ class SerialTransport:
         ``PurgeComm(PURGE_RXCLEAR)`` before every write: stale bytes from a
         power-on glitch or from the application's own UART output must never
         be consumed as if they were part of an ACK.
+
+        There is deliberately **no** ``flush()``/``tcdrain()`` here: pyserial's
+        write already waits (bounded by ``write_timeout``) for the driver to
+        accept the bytes, while ``tcdrain`` has no timeout at all and blocks
+        forever if the peer stops reading - which is exactly what happens on a
+        pty whose reader has gone away, or with an unplugged USB adapter.
         """
         if self._serial is None:
             raise TransportError("port is not open")
@@ -146,7 +152,6 @@ class SerialTransport:
             self.reset_input_buffer()
         try:
             self._serial.write(data)
-            self._serial.flush()
         except (OSError, serial.SerialException) as exc:
             self.close()
             raise TransportError(f"write failed: {exc}") from exc
