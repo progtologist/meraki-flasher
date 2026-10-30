@@ -51,7 +51,7 @@ class MockIspDevice(threading.Thread):
         self.violations: list[str] = []
         self.running = False
         self.rebooted = False
-        self._stop = threading.Event()
+        self._stop_event = threading.Event()
         self._expected_index: int | None = None
         self._cursor = 0
         self._total = 0
@@ -72,7 +72,7 @@ class MockIspDevice(threading.Thread):
         self.violations.append(message)
 
     # -- protocol -----------------------------------------------------
-    def _handle(self, raw: bytes) -> None:
+    def _process_packet(self, raw: bytes) -> None:
         if len(raw) != protocol.PACKET_SIZE:
             self._violation(f"short packet: {len(raw)} bytes")
             return
@@ -147,7 +147,7 @@ class MockIspDevice(threading.Thread):
     def run(self) -> None:  # noqa: D102
         deadline = time.monotonic() + self.silent_for
         buf = bytearray()
-        while not self._stop.is_set():
+        while not self._stop_event.is_set():
             try:
                 data = os.read(self._fd, 4096)
             except OSError:
@@ -160,7 +160,7 @@ class MockIspDevice(threading.Thread):
             while len(buf) >= protocol.PACKET_SIZE:
                 packet = bytes(buf[: protocol.PACKET_SIZE])
                 del buf[: protocol.PACKET_SIZE]
-                self._handle(packet)
+                self._process_packet(packet)
 
     def stop(self) -> None:
-        self._stop.set()
+        self._stop_event.set()

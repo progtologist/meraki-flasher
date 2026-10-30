@@ -420,7 +420,7 @@ cd meraki-flasher
 python3 -m unittest discover -s tests -t . -v
 ```
 
-33 tests, about 13 s. They flash a firmware image into the emulated MCU over a
+36 tests, about 13 s. They flash a firmware image into the emulated MCU over a
 pseudo terminal and assert the resulting image is byte-identical; they also pin
 the wire format (initial index 18, +2 per packet, 40 ms connect window,
 reopen-after-connect, 48/56-byte chunks), the resend/retry path, a device that
@@ -436,9 +436,11 @@ MERAKI_FIRMWARE=/path/to/MEM03_V514_260923.bin python3 -m unittest discover -s t
 # MERAKI_FIRMWARE=none forces the synthetic fixture
 ```
 
-CI (`.github/workflows/tests.yml`) runs the same suite on Ubuntu, macOS and
-Windows with Python 3.9, 3.12 and 3.13, plus a `ruff check` job. The pty-based
-tests skip themselves on Windows; macOS and Linux run all of them.
+CI (`.github/workflows/tests.yml`) runs the same suite on Ubuntu 24.04 (Python
+3.9 and 3.13), macOS (3.13) and Windows (3.9 and 3.13), plus a `ruff check` job.
+The pty-based tests skip themselves on Windows; macOS and Linux run all of them.
+(`ubuntu-latest` moved to Ubuntu 26.04, which has no 3.9 build, and the macOS
+runners are arm64 — hence the explicit cells.)
 
 ```
 tests/test_protocol.py   framing, checksum, chunk layout

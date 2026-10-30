@@ -4,6 +4,21 @@ All notable changes to Meraki Flasher are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-10-30
+
+### Fixed
+
+- **Python 3.13 compatibility of the emulator.** The private method `_handle`
+  collided with `threading.Thread._handle` (introduced in 3.13) and `self._stop`
+  shadowed `Thread._stop`, so every pty-based test — and therefore the GUI demo
+  mode — failed with `TypeError: '_thread._ThreadHandle' object is not callable`.
+  Renamed to `_process_packet` and `_stop_event`, with a regression test that
+  keeps our attributes out of `threading.Thread`'s namespace.
+- **CI matrix.** `ubuntu-latest` now points at Ubuntu 26.04, which has no Python
+  3.9 build, and the macOS runners are arm64 (also without 3.9). The matrix now
+  pins `ubuntu-24.04` and spells the cells out: Linux 3.9/3.13, macOS 3.13,
+  Windows 3.9/3.13.
+
 ## [1.0.0] - 2026-10-30
 
 First public release.
@@ -38,4 +53,5 @@ First public release.
 - Meraki's firmware images and vendor binaries are **not** distributed with this
   project; the test suite falls back to a synthetic image of identical size.
 
+[1.0.1]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.1
 [1.0.0]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.0
