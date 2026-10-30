@@ -5,7 +5,7 @@ Implements the Nuvoton NuMicro ISP (UART) programming protocol used by the
 can be performed from Linux, macOS or Windows without Wine.
 """
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 APP_NAME = "Meraki Flasher"
 APP_TAGLINE = "MCU firmware updater for Meraki coffee machines"
 

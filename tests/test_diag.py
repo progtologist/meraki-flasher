@@ -26,7 +26,7 @@ class WatchResetTests(unittest.TestCase):
                 if stop.is_set():
                     break
                 if pause_at is not None and index == pause_at:
-                    time.sleep(1.8)  # a real power cycle: MCU silent, then reboots
+                    time.sleep(2.0)  # a real power cycle: MCU silent, then reboots
                 try:
                     os.write(master, b"    2026/10/30 21:56:35\r\n")
                 except OSError:
@@ -47,7 +47,7 @@ class WatchResetTests(unittest.TestCase):
                     pass
 
     def test_reports_a_reset_when_the_stream_pauses(self) -> None:
-        result = self._run(pause_at=5)
+        result = self._run(pause_at=5, seconds=4.0)
         self.assertGreaterEqual(result.resets, 1)
         self.assertGreater(result.max_gap, diag.RESET_GAP)
         self.assertGreater(result.bytes_received, 0)

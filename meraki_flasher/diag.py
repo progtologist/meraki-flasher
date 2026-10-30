@@ -313,4 +313,12 @@ def watch_reset(
             emit(f"  +{now - start:5.1f}s  {len(chunk):3d}B  {preview}")
     finally:
         transport.close()
+    # A device that has gone quiet by the end of the window is just as
+    # interesting: count the trailing silence, otherwise a reboot that lands
+    # near the end of the run would go unreported.
+    if last_seen is not None:
+        tail = time.monotonic() - last_seen
+        if tail > RESET_GAP:
+            result.gaps.append(tail)
+            emit(f"  end of window: {tail:.1f}s of silence after the last data")
     return result

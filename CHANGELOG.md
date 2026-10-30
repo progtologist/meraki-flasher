@@ -4,6 +4,15 @@ All notable changes to Meraki Flasher are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-10-30
+
+### Fixed
+
+- **`--watch-reset` missed a reset that was still in progress.** A silence was
+  only counted when data resumed, so a machine that was still rebooting when
+  the listening window closed reported "no reset detected" — exactly what the
+  macOS CI run hit. Trailing silence now counts too, and says so in the log.
+
 ## [1.0.3] - 2026-10-30
 
 ### Fixed
@@ -96,6 +105,7 @@ First public release.
 - Meraki's firmware images and vendor binaries are **not** distributed with this
   project; the test suite falls back to a synthetic image of identical size.
 
+[1.0.4]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.4
 [1.0.3]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.3
 [1.0.2]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.2
 [1.0.1]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.1
