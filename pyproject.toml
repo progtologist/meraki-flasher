@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meraki-flasher"
+version = "1.0.0"
+description = "MCU firmware updater for Meraki coffee machines (Linux, macOS, Windows)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Meraki Flasher contributors" }]
+dependencies = ["pyserial>=3.5"]
+keywords = ["meraki", "firmware", "numicro", "isp", "uart"]
+
+[project.optional-dependencies]
+dev = ["ruff", "mypy"]
+
+[project.scripts]
+meraki-flasher = "meraki_flasher.gui:main"
+meraki-flasher-cli = "meraki_flasher.cli:main"
+
+[tool.setuptools]
+packages = ["meraki_flasher"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]
+# tkinter callbacks pass callables as defaults; that is idiomatic here.
+ignore = ["B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["meraki_flasher", "tests"]
+

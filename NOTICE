@@ -1,0 +1,24 @@
+Meraki Flasher
+==============
+
+Copyright 2026 the Meraki Flasher contributors.
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes software developed as part of
+OpenNuvoton/ISPTool (https://github.com/OpenNuvoton/ISPTool),
+Copyright 2025 Nuvoton Technology Corporation, licensed under the
+Apache License, Version 2.0.
+
+Modifications made in this project:
+
+  * the ISP command layer of NuvoISP/ISPLdCMD.cpp was re-implemented in
+    Python (meraki_flasher/isp.py, meraki_flasher/protocol.py);
+  * the device emulator, session layer, CLI and Tkinter GUI are new work;
+  * the packet framing, checksum algorithm, command codes, chunk sizes and
+    retry/resend behaviour follow the upstream implementation so that the
+    tool is wire-compatible with NuvoISP 4.13.
+
+"Nuvoton" and "NuMicro" are trademarks of Nuvoton Technology Corporation.
+"Meraki" is a trademark of its respective owner. This project is an
+independent, unofficial tool; it is not affiliated with, authorised or
+endorsed by Nuvoton Technology Corporation or Merakitech.
