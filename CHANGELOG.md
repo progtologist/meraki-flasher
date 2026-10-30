@@ -4,6 +4,30 @@ All notable changes to Meraki Flasher are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-10-30
+
+### Fixed
+
+- **macOS hang on teardown (demo mode and the test suite).** Closing a pty file
+  descriptor while another thread is still blocked reading it makes `close()`
+  wait for that reader on macOS — harmless on Linux, a deadlock here. Found by
+  the CI watchdog, which printed the exact frames: `tests/support.py __exit__`
+  in `os.close()` with the emulator parked in `os.read()`. The emulator now
+  polls the pty with `select(0.1 s)`, and both shutdown paths (GUI demo device
+  and the test harness) stop it, join the thread, drain the queue and close the
+  slave before the master.
+
+### Changed
+
+- `FlashSession` accepts `command_timeout` / `program_timeout`, so callers can
+  shorten the protocol timeouts. The test suite uses 1 s / 2 s: with production
+  timeouts a wedged device would take 1134 chunks × 10 retries × 5 s to fail,
+  which looks exactly like a hung test.
+- CI runs the suite through `tests/run.py`, which arms
+  `faulthandler.dump_traceback_later` — a stall now prints every thread's stack
+  instead of silently burning a runner — and the test step is bounded with
+  `timeout-minutes: 10`.
+
 ## [1.0.2] - 2026-10-30
 
 ### Fixed
@@ -72,6 +96,7 @@ First public release.
 - Meraki's firmware images and vendor binaries are **not** distributed with this
   project; the test suite falls back to a synthetic image of identical size.
 
+[1.0.3]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.3
 [1.0.2]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.2
 [1.0.1]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.1
 [1.0.0]: https://github.com/progtologist/meraki-flasher/releases/tag/v1.0.0

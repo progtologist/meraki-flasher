@@ -17,6 +17,7 @@ Two things live here:
 from __future__ import annotations
 
 import os
+import select
 import struct
 import time
 from pathlib import Path
@@ -100,12 +101,24 @@ class DeviceHarness:
         for transport in self._transports:
             transport.close()
         self.device.stop()
-        time.sleep(0.05)
-        for fd in (self.master_fd, self.slave_fd):
+        # Wait for the reader to leave its select() before closing anything:
+        # on macOS closing a pty fd with a thread still blocked on it hangs.
+        self.device.join(timeout=1.0)
+        self._drain_master()
+        for fd in (self.slave_fd, self.master_fd):
             try:
                 os.close(fd)
             except OSError:
                 pass
+
+    def _drain_master(self) -> None:
+        """Discard bytes still queued so close() never waits for a reader."""
+        try:
+            while select.select([self.master_fd], [], [], 0)[0]:
+                if not os.read(self.master_fd, 4096):
+                    break
+        except (OSError, ValueError):
+            pass
 
     def open_transport(self) -> SerialTransport:
         transport = SerialTransport(self.port)

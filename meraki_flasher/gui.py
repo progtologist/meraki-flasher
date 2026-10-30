@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import queue
+import select
 import threading
 import time
 import tkinter as tk
@@ -82,11 +83,23 @@ class DemoDevice:
 
     def close(self) -> None:
         self.device.stop()
-        for fd in (self.master_fd, self.slave_fd):
+        # On macOS, closing a pty fd while a thread is still blocked reading it
+        # waits for that reader, so let the emulator leave select() first.
+        self.device.join(timeout=1.0)
+        self._drain()
+        for fd in (self.slave_fd, self.master_fd):
             try:
                 os.close(fd)
             except OSError:
                 pass
+
+    def _drain(self) -> None:
+        try:
+            while select.select([self.master_fd], [], [], 0)[0]:
+                if not os.read(self.master_fd, 4096):
+                    break
+        except (OSError, ValueError):
+            pass
 
 
 class MerakiFlasher(tk.Tk):

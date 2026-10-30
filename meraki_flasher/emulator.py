@@ -9,6 +9,7 @@ exercised end to end without any hardware.
 from __future__ import annotations
 
 import os
+import select
 import struct
 import threading
 import time
@@ -148,6 +149,15 @@ class MockIspDevice(threading.Thread):
         deadline = time.monotonic() + self.silent_for
         buf = bytearray()
         while not self._stop_event.is_set():
+            # select() with a timeout so stop() takes effect promptly: a thread
+            # parked in a blocking read() would keep the fd "busy", and on
+            # macOS closing a pty fd with an outstanding reader waits for it.
+            try:
+                ready, _, _ = select.select([self._fd], [], [], 0.1)
+            except (OSError, ValueError):
+                break
+            if not ready:
+                continue
             try:
                 data = os.read(self._fd, 4096)
             except OSError:
